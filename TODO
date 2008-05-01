@@ -1,0 +1,7 @@
+The following features will be provided shortly
+
+* Rule post pruning, so that the tree avoids overfitting the data
+* Providing a wider range of functions for node selection
+* Making the handling of continous values more robust
+
+If there are any bugs, or any more features that can be added, please mail me at reuben.cornel@gmail.com

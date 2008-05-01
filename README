@@ -1,0 +1,42 @@
+INTRODUCTION
+------------
+This package provides an implementation of an algorithm that can be used to build a decision tree.
+
+
+FEATURES
+--------
+This package provides the following features
+
+* Classification of multiple classes of instances
+* Handling attributes with continuous values (A bit clunky for the timebeing)
+* Function for selecting attributes can be modified by changing the *attribute-selection-function* variable
+
+USAGE
+-----
+
+To use this package do
+(asdf:oos 'asdf:load-op 'decisiontree)
+
+TRAINING
+--------
+
+To build up a set of instances that could be used for training do the following
+
+(defparameter <list-variable> nil)
+
+(push (define-instance <class> <attr-value-pair> <attr-value-pair> ...) <list-variable>)
+
+(create-classifier <list-variable>)
+
+This returns the root node of the decision tree.
+
+
+CLASSIFICATION
+--------------
+
+To classify an instance use 
+
+(classify <root-node-of-the-tree> <instance>)
+
+This returns the classification of the instance
+If the tree has not been trained sufficiently it will throw an error
