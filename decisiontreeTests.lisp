@@ -1,42 +1,42 @@
 (in-package :decisiontree)
 
 
-(defparameter *instance-list* (loop for i from 1 to 14 collect (make-instance 'instance)))
+(defparameter *instance-list* (loop for i from 1 to 8 collect (make-instance 'instance)))
 
 (mapcar #'(lambda(x y)
 	    (mapcar #'(lambda(z)
 			(set-attribute-value (first z) (second z) y))
 		    x))
-;; 	'(((height short) (hair blond)    (eyecolor blue) )
-;; 	  ((height tall)  (hair blond)    (eyecolor brown) )
-;; 	  ((height tall)  (hair red)      (eyecolor blue) )
-;; 	  ((height short) (hair dark)     (eyecolor blue) )
-;; 	  ((height tall)  (hair dark)     (eyecolor blue) )
-;; 	  ((height tall)  (hair blond)    (eyecolor blue) )
-;; 	  ((height tall)  (hair dark)     (eyecolor brown) )
-;; 	  ((height short) (hair blond)    (eyecolor brown) ))
-;; 	*instance-list*)
-	'(((outlook Sunny) (temp Hot) (humidity High) (wind Weak))
-	  ((outlook Sunny) (temp Hot) (humidity High) (wind Strong))
-	  ((outlook Overcast) (temp Hot) (humidity High) (wind Weak))
-	  ((outlook Rain) (temp Mild) (humidity High) (wind Weak))
-	  ((outlook Rain) (temp Cool) (humidity Normal) (wind Weak))
-	  ((outlook Rain) (temp Cool) (humidity Normal) (wind Strong))
-	  ((outlook Overcast) (temp Cool) (humidity Normal) (wind Strong))
-	  ((outlook Sunny) (temp Mild) (humidity High) (wind Weak))
-	  ((outlook Sunny) (temp Cool) (humidity Normal) (wind Weak))
-	  ((outlook Rain) (temp Mild) (humidity Normal) (wind Weak))
-	  ((outlook Sunny) (temp Mild) (humidity Normal) (wind Strong))
-	  ((outlook Overcast) (temp Mild) (humidity High) (wind Strong))
-	  ((outlook Overcast) (temp Hot) (humidity Normal) (wind Weak))
-	  ((outlook Rain) (temp Mild) (humidity High) (wind Strong)))
+	'(((height short) (hair blond)    (eyecolor blue) )
+	  ((height tall)  (hair blond)    (eyecolor brown) )
+	  ((height tall)  (hair red)      (eyecolor blue) )
+	  ((height short) (hair dark)     (eyecolor blue) )
+	  ((height tall)  (hair dark)     (eyecolor blue) )
+	  ((height tall)  (hair blond)    (eyecolor blue) )
+	  ((height tall)  (hair dark)     (eyecolor brown) )
+	  ((height short) (hair blond)    (eyecolor brown) ))
 	*instance-list*)
+;; 	'(((outlook Sunny) (temp Hot) (humidity High) (wind Weak))
+;; 	  ((outlook Sunny) (temp Hot) (humidity High) (wind Strong))
+;; 	  ((outlook Overcast) (temp Hot) (humidity High) (wind Weak))
+;; 	  ((outlook Rain) (temp Mild) (humidity High) (wind Weak))
+;; 	  ((outlook Rain) (temp Cool) (humidity Normal) (wind Weak))
+;; 	  ((outlook Rain) (temp Cool) (humidity Normal) (wind Strong))
+;; 	  ((outlook Overcast) (temp Cool) (humidity Normal) (wind Strong))
+;; 	  ((outlook Sunny) (temp Mild) (humidity High) (wind Weak))
+;; 	  ((outlook Sunny) (temp Cool) (humidity Normal) (wind Weak))
+;; 	  ((outlook Rain) (temp Mild) (humidity Normal) (wind Weak))
+;; 	  ((outlook Sunny) (temp Mild) (humidity Normal) (wind Strong))
+;; 	  ((outlook Overcast) (temp Mild) (humidity High) (wind Strong))
+;; 	  ((outlook Overcast) (temp Hot) (humidity Normal) (wind Weak))
+;; 	  ((outlook Rain) (temp Mild) (humidity High) (wind Strong)))
+;; 	*instance-list*)
 
 (mapcar #'(lambda(x y)
 	    (setf (class-name x) y))
 	*instance-list*
-	 '(No No Yes Yes Yes No Yes No Yes Yes Yes Yes Yes No)) ;o
-;	'(yes no yes no no yes no no))
+					;	 '(No No Yes Yes Yes No Yes No Yes Yes Yes Yes Yes No)) ;o
+	'(yes no yes no no yes no no))
 
 
 
@@ -244,3 +244,9 @@
     (print (sort-on-attribute-value instance-list 'v1))))
 
 (lisp-unit:run-tests)
+
+(defparameter *root-node* (create-classifier *instance-list*))
+
+(maphash #'(lambda(k v)
+	     (format t "~a ~a ~%" k v))
+	 (subtree-hash *root-node*))

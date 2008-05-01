@@ -20,7 +20,15 @@
    (class-name :initform nil
 	       :accessor class-name)))
 
-
+(defmacro define-instance(instance-class &rest attr-value-pairs)
+  `(let ((inst (make-instance 'instance)))
+     (setf (class-name inst) ',instance-class)
+     (dolist (attr-val-pair ',attr-value-pairs)
+       (set-attribute-value (first attr-val-pair)
+			    (second attr-val-pair) 
+			    inst))
+     inst))
+			    
 (defmethod set-attribute-value(attribute value inst)
   (error "Not Implemented"))
 
@@ -82,15 +90,6 @@
   (sort-instances-helper (mapcar #'(lambda(x)
 				     (class-name x))
 				 list-of-instances)))
-
-(defmacro spy(form)
-  "Is takes a form evaluates it and prints it out in the format 
-   form => output. The value of the evaluated form is returned"
-  (let ((return-val (gensym)))
-    `(let ((,return-val (multiple-value-list  ,form)))
-       (format t "~s => ~{~s ~}~%" ',form ,return-val)
-       (values-list ,return-val))))
-
 
 (defun sum-up-individual-sets(sort-class-list number-of-instances)
   (cond ((null sort-class-list) 0)
@@ -162,9 +161,11 @@
 	   (setf (label root-node) (class-name (first list-of-instances)))
 	   root-node)
 	  (t  
+	   ;;otherwise find the best attribute, sort the instance list based on attribute values 
 	   (let* ((best-attribute (funcall (attribute-selection-function root-node) list-of-instances))
 		  (sorted-instance-list (sort-on-attribute-value list-of-instances best-attribute)))
 	     (setf (attribute-name root-node) best-attribute)
+	     ;;generate the rest of the tree
 	     (mapcar #'(lambda(x)
 			 (setf (gethash (gethash best-attribute (attributes (first x))) (subtree-hash root-node))
 			       (create-classifier x)))
