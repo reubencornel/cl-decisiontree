@@ -243,6 +243,41 @@
     
     (print (sort-on-attribute-value instance-list 'v1))))
 
+(lisp-unit:define-test sort-on-attr-val-test
+  (let ((instance-list nil))
+       
+    (push (define-instance warm (temp 30)) instance-list)
+    (push (define-instance cold (temp 10)) instance-list)
+    (push (define-instance warm (temp 25)) instance-list)
+    
+    (lisp-unit:assert-equal '(10 25 30) (mapcar #'(lambda(x)
+						    (gethash 'temp (attributes x)))
+						(sort-on-continuous-valued-attribute instance-list 'temp)))))
+
+
+
+(lisp-unit:define-test generate-range-symbols-test
+  (let ((instance-list nil))
+       
+    (push (define-instance warm (temp 30)) instance-list)
+    (push (define-instance cold (temp 10)) instance-list)
+    (push (define-instance warm (temp 25)) instance-list)
+    
+    (format t "List Length: ~a~%" (length instance-list))
+    (setf instance-list (sort-on-continuous-valued-attribute instance-list 'temp))
+
+    (mapcar #'(lambda(x)
+		(format t "~a ~%" (class-name x))
+		(maphash #'(lambda(k v)
+			   
+			     (format t "~a ~a ~%" k v))
+			 (attributes x)))
+	    (generate-range-symbols instance-list 'temp))
+    (maphash #'(lambda(k v)
+		 (format t "~a ~a ~%" k v))
+	     (subtree-hash (create-classifier instance-list))))
+
+
 (lisp-unit:run-tests)
 
 (defparameter *root-node* (create-classifier *instance-list*))

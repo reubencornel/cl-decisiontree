@@ -171,3 +171,29 @@
 			       (create-classifier x)))
 		     sorted-instance-list))))
     root-node))
+
+(defun sort-on-continuous-valued-attribute(list-of-instances attribute-name &optional (predicate #'<))
+  (sort list-of-instances predicate :key (lambda(x)
+					    (gethash attribute-name (attributes x)))))
+
+
+
+(defun generate-range-symbols-helper(sorted-instance-list attribute class-name current-symbol)
+  (cond ((null sorted-instance-list) (error "empty instance list"))
+	((= (length sorted-instance-list) 1) 
+	 (remhash attribute (attributes (first sorted-instance-list)))
+	 (setf (gethash attribute (attributes (first sorted-instance-list))) current-symbol))
+	((not (equal class-name (class-name (First sorted-instance-list))))
+	 (let ((new-sym (gensym)))
+	   (remhash attribute (attributes (first sorted-instance-list)))
+	   (setf (gethash attribute (Attributes (first sorted-instance-list))) new-sym)
+	   (generate-range-symbols-helper (cdr sorted-instance-list) attribute (class-name (first sorted-instance-list)) new-sym)))
+	((equal class-name (class-name (first sorted-instance-list)))
+	 (remhash attribute (attributes (first sorted-instance-list)))
+	 (setf (gethash attribute (Attributes (first sorted-instance-list))) current-symbol)
+	 (generate-range-symbols-helper (cdr sorted-instance-list) attribute class-name current-symbol))
+	(t (error "Unhandled Condition"))))
+	 
+(defun generate-range-symbols(sorted-instance-list attribute)
+    (generate-range-symbols-helper sorted-instance-list attribute (class-name (First sorted-instance-list)) (gensym))
+    sorted-instance-list)
