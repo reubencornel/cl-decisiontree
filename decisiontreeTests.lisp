@@ -275,7 +275,7 @@
 	    (generate-range-symbols instance-list 'temp))
     (maphash #'(lambda(k v)
 		 (format t "~a ~a ~%" k v))
-	     (subtree-hash (create-classifier instance-list))))
+	     (subtree-hash (create-classifier instance-list)))))
 
 
 (lisp-unit:run-tests)
