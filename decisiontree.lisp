@@ -148,6 +148,7 @@
   (let ((attribute-info-gain-list (get-attribute-info-gain-list list-of-instances)))
     (first (first (sort attribute-info-gain-list #'> :key #'second)))))
 
+(defparameter *attribute-selection-function* #'select-attribute)
 
 (defun all-instances-of-same-class(list-of-instances)
   (< (length (sort-instances list-of-instances)) 2))
@@ -162,17 +163,36 @@
 	   root-node)
 	  (t  
 	   ;;otherwise find the best attribute, sort the instance list based on attribute values 
-	   (let* ((best-attribute (funcall (attribute-selection-function root-node) list-of-instances))
-		  (sorted-instance-list (sort-on-attribute-value list-of-instances best-attribute)))
-	     (setf (attribute-name root-node) best-attribute)
+	   (let* ((best-attribute (funcall *attribute-selection-function* list-of-instances))
+		  (sorted-instance-list (sort-on-attribute-value list-of-instances best-attribute))) ;;This is a list of lists such that each element in the inner list  has the same value for the specified attribute
+	     (setf (attribute-name root-node) best-attribute)                                        
 	     ;;generate the rest of the tree
 	     (mapcar #'(lambda(x)
-			 (setf (gethash (gethash best-attribute (attributes (first x))) (subtree-hash root-node))
-			       (create-classifier x)))
-		     sorted-instance-list))))
+			 (setf (gethash (gethash best-attribute (attributes (first x))) (subtree-hash root-node)) ;;Create an entry in the subtree hash for each set of
+			       (create-classifier x))) ;; elements in the sorted element list and associate a child node with that.
+		     sorted-instance-list)))) 
     root-node))
 
+(defun keys(hash-table)
+  "Get a list of keys in a given table"
+  (let ((keys-list nil))
+    (maphash #'(lambda(k v)
+		 (declare (ignore v))
+		 (push k keys-list))
+	     hash-table)
+    (reverse keys-list)))
+
+(defun classify(tree-root-node instance)
+  (if (null tree-root-node)
+      (error "Not trained for this instance"))
+  (cond ((= (length (keys (subtree-hash tree-root-node))) 0) (label  tree-root-node))
+	(t (classify (gethash (gethash (attribute-name tree-root-node) ;;Get the value of the attribute associated with the current tree node
+				       (attributes instance))          ;; from the instance
+			      (subtree-hash tree-root-node)) instance)))) ;;Use that value to get to the next node
+
+
 (defun sort-on-continuous-valued-attribute(list-of-instances attribute-name &optional (predicate #'<))
+  "Sort elements of a list on based on the value of the attribute"
   (sort list-of-instances predicate :key (lambda(x)
 					    (gethash attribute-name (attributes x)))))
 
@@ -182,14 +202,11 @@
   (cond ((null sorted-instance-list) (error "empty instance list"))
 	((and (= (length sorted-instance-list) 1)
 	      (not (equal class-name (class-name (first sorted-instance-list)))))
-	 ;(remhash attribute (attributes (first sorted-instance-list)))
 	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gensym)))
 	((and (= (length sorted-instance-list) 1)
 	      (equal class-name (class-name (first sorted-instance-list))))
-	 ;(remhash attribute (attributes (first sorted-instance-list)))
 	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gethash class-name current-symbol-hash)))
 	((not (equal class-name (class-name (first sorted-instance-list))))
-;	 (remhash attribute (attributes (first sorted-instance-list)))
 	 (setf (gethash (class-name (first sorted-instance-list)) current-symbol-hash) (gensym))
 	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gethash (class-name (first sorted-instance-list)) current-symbol-hash))
 	 (generate-range-symbols-helper (cdr sorted-instance-list) attribute (class-name (first sorted-instance-list)) current-symbol-hash))
