@@ -7,6 +7,8 @@
 		  :accessor instance-list)
    (label :initform nil
 	  :accessor label)
+   (attribute-name :initform nil
+		   :accessor attribute-name)
    (attribute-selection-function :initform #'select-attribute
 				 :accessor attribute-selection-function)))
 
@@ -62,7 +64,7 @@
   (cond ((null sorted-list) (list (list element))) ;; we have run to the end of the list and we have not found the element
 	;;so create a new list
 	((funcall test element (first sorted-list)) (append (list (cons element (first sorted-list)))
-						      (cdr sorted-list)))
+							    (cdr sorted-list)))
 	(t (cons (car sorted-list) (insert-element-in-list (cdr sorted-list) element test)))))
 
 (defun sort-instances-helper(list-of-instances &optional (sorted-list nil) (sort-test #'member))
@@ -70,7 +72,11 @@
 	(t (sort-instances-helper (cdr list-of-instances)
 				  (insert-element-in-list sorted-list (car list-of-instances) sort-test)
 				  sort-test))))
-				  
+
+(defun sort-on-attribute-value (list-of-instances attribute)
+  (sort-instances-helper list-of-instances nil #'(lambda(element list)
+						   (equal (gethash attribute (attributes element))
+							  (gethash attribute (attributes (first list)))))))
 
 (defun sort-instances(list-of-instances)
   (sort-instances-helper (mapcar #'(lambda(x)
@@ -120,29 +126,47 @@
 
 (defun sum-of-attribute-entropies(list-of-instances attr)
   (let ((list-of-attribute-values (get-possible-attribute-values list-of-instances attr)))
-    (print  (reduce #'+ 
-		    (mapcar #'(lambda(x)
-				(*
-				 (/ (length (get-instances-with-specific-instance-values list-of-instances attr x))
-				    (length list-of-instances))
-				(calculate-entropy (get-instances-with-specific-instance-values list-of-instances attr x))))
-			    list-of-attribute-values)))))
+    (reduce #'+ 
+	    (mapcar #'(lambda(x)
+			(*
+			 (/ (length (get-instances-with-specific-instance-values list-of-instances attr x))
+			    (length list-of-instances))
+			 (calculate-entropy (get-instances-with-specific-instance-values list-of-instances attr x))))
+		    list-of-attribute-values))))
 
 
 (defun get-attribute-info-gain-list(list-of-instances)
   "returns a list of list each element is of the type (attribute info-gain)"
-  (let ((overall-entropy (print (calculate-entropy list-of-instances)))
+  (let ((overall-entropy (calculate-entropy list-of-instances))
 	(attribute-list (get-attribute-list (first list-of-instances))))
     (mapcar #'(lambda(attr)
-		(format t "~% === ~%")
-		(format t "~a~%" attr)
 		(list attr
 		      (- overall-entropy
-			 (print (sum-of-attribute-entropies list-of-instances attr)))))
+			 (sum-of-attribute-entropies list-of-instances attr))))
 	    attribute-list)))
-
 
 (defun select-attribute(list-of-instances)
   (let ((attribute-info-gain-list (get-attribute-info-gain-list list-of-instances)))
-    (first (first (print (sort attribute-info-gain-list #'> :key #'second))))))
-    
+    (first (first (sort attribute-info-gain-list #'> :key #'second)))))
+
+
+(defun all-instances-of-same-class(list-of-instances)
+  (< (length (sort-instances list-of-instances)) 2))
+
+
+(defun create-classifier(list-of-instances)
+  (let ((root-node (make-instance 'node)))
+    ;;If all examples belong to one class then label the node to be of the same
+    ;;class and return it
+    (cond ((all-instances-of-same-class list-of-instances)
+	   (setf (label root-node) (class-name (first list-of-instances)))
+	   root-node)
+	  (t  
+	   (let* ((best-attribute (funcall (attribute-selection-function root-node) list-of-instances))
+		  (sorted-instance-list (sort-on-attribute-value list-of-instances best-attribute)))
+	     (setf (attribute-name root-node) best-attribute)
+	     (mapcar #'(lambda(x)
+			 (setf (gethash (gethash best-attribute (attributes (first x))) (subtree-hash root-node))
+			       (create-classifier x)))
+		     sorted-instance-list))))
+    root-node))

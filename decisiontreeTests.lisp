@@ -201,57 +201,46 @@
 
    (print (select-attribute *instance-list*)))
 
-(lisp-unit:run-tests get-instances-with-specific-instance-values-test)
 
-(select-attribute *instance-list*)
-;	  ((outlook Rain) (temp Mild) (humidity High) (wind Strong)))
+(lisp-unit:define-test all-instances-of-same-class-test
+  (let ((instance-1 (make-instance 'instance))
+	(instance-2 (make-instance 'instance))
+	(instance-3 (make-instance 'instance))
+	(instance-list nil))
+    (push instance-1 instance-list)
+    (push instance-2 instance-list)
+    (push instance-3 instance-list)
+    
+    (setf (class-name instance-1) 'a)
+    (setf (class-name instance-2) 'b)
+    (setf (class-name instance-3) 'a)
+    
+    (lisp-unit:assert-false (all-instances-of-same-class instance-list))
+    (setf (class-name instance-2) 'a)
+    (lisp-unit:assert-true (all-instances-of-same-class instance-list))))
 
-(defparameter *level-1-node-2* (remove-if #'(lambda(x) ;;normal humidity
-					     (equal (gethash 'humidity (attributes x)) 'normal))
-					  *instance-list*))
-(select-attribute *level-1-node-1*)
-(get-possible-attribute-values *instance-list* 'outlook)
-(defparameter *level-2-node-1* (remove-if-not #'(lambda(x)  ;; Sunny -End  No
-						  (equal (gethash 'outlook (attributes x)) 'sunny))
-					      *level-1-node-1*))
-(defparameter *level-2-node-2* (remove-if-not #'(lambda(x)  ;; Overcast - Yes
-						  (equal (gethash 'outlook (attributes x)) 'overcast))
-					      *level-1-node-1*))
-(defparameter *level-2-node-3* (remove-if-not #'(lambda(x)  
-						  (equal (gethash 'outlook (attributes x)) 'rain))
-					      *level-1-node-1*))
+(lisp-unit:define-test sort-attr-value-test
+  (let ((instance-1 (make-instance 'instance))
+	(instance-2 (make-instance 'instance))
+	(instance-3 (make-instance 'instance))
+	(instance-list nil))
+    (push instance-1 instance-list)
+    (push instance-2 instance-list)
+    (push instance-3 instance-list)
+    
+    (setf (class-name instance-1) 'a)
+    (setf (class-name instance-2) 'b)
+    (setf (class-name instance-3) 'a)
+    
+    (set-attribute-value 'v1 'a instance-1)
+    (set-attribute-value 'v2 'b instance-1)
+    
+    (set-attribute-value 'v1 'b instance-2)
+    (set-attribute-value 'v2 'a instance-2)
 
-(select-attribute *level-2-node-3*)
+    (set-attribute-value 'v1 'a instance-3)
+    (set-attribute-value 'v2 'c instance-3)
+    
+    (print (sort-on-attribute-value instance-list 'v1))))
 
-(mapcar #'(lambda(x)
-	    (setf (gethash 'outlook (attribute-considered-hash x)) t))
-	*instance-list*)
-
-
-(print *level-2-node-1*)
-(print *level-2-node-2*)
-(print *level-2-node-3*)
-
-;(select-attribute *level-2-node-3*)
-(mapcar #'(lambda(x)
-	    (maphash #'(lambda(k v)
-			 (format t "~a ~a ~a ~%" k v (class-name x)))
-		     (attributes x))
-	    (print "==="))
-	*instance-list*)
-
-(select-attribute *level-1-node-2*)
-(get-possible-attribute-values *level-1-node-2* 'temp)
-(defparameter *level-2-node-4* (remove-if-not #'(lambda(x)  ;; cool 
-						  (equal (gethash 'temp (attributes x)) 'cool))
-					      *level-1-node-2*))
-(defparameter *level-2-node-5* (remove-if-not #'(lambda(x)  ;; mild -End  yes
-						  (equal (gethash 'temp (attributes x)) 'mild))
-					      *level-1-node-2*))
-
-(defparameter *level-2-node-6* (remove-if-not #'(lambda(x)  ;; hot -End  yes
-						  (equal (gethash 'temp (attributes x)) 'hot))
-					      *level-1-node-2*))
-
-
-;(select-attribute *level-2-node-6*)
+(lisp-unit:run-tests)
