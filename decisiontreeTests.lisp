@@ -265,9 +265,15 @@
     (push (define-instance warm (temp 30)) instance-list)
     (push (define-instance cold (temp 10)) instance-list)
     (push (define-instance warm (temp 25)) instance-list)
+    (push (define-instance hot (temp 75)) instance-list)
     
     (format t "List Length: ~a~%" (length instance-list))
     (setf instance-list (sort-on-continuous-valued-attribute instance-list 'temp))
+    (defparameter range-symbol-hash (generate-range-symbols instance-list 'temp))
+    
+    (maphash #'(lambda(k v)
+		 (format t "~a ~a ~%" k v))
+	     range-symbol-hash)
 
     (mapcar #'(lambda(x)
 		(format t "~a ~%" (class-name x))
@@ -275,10 +281,10 @@
 			   
 			     (format t "~a ~a ~%" k v))
 			 (attributes x)))
-	    (generate-range-symbols instance-list 'temp))
+	    instance-list)
     (maphash #'(lambda(k v)
 		 (format t "~a ~a ~%" k v))
-	     (subtree-hash (create-classifier instance-list)))))
+	     range-symbol-hash)))
 
-(lisp-unit:run-tests)
+(lisp-unit:run-tests generate-range-symbols-test)
 
