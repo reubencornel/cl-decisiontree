@@ -20,6 +20,15 @@
    (class-name :initform nil
 	       :accessor class-name)))
 
+(defclass range() ;;This is private only to this package
+  ((lower-bound :initarg :lower-bound
+		:accessor lower-bound)
+   (upper-bound :initarg :upper-bound
+		:accessor upper-bound)
+   (range-class :initarg :range-class 
+		:accessor range-class)))
+
+
 (defmacro define-instance(instance-class &rest attr-value-pairs)
   `(let ((inst (make-instance 'instance)))
      (setf (class-name inst) ',instance-class)
@@ -177,29 +186,81 @@
 					    (gethash attribute-name (attributes x)))))
 
 
-
-(defun generate-range-symbols-helper(sorted-instance-list attribute class-name current-symbol-hash)
-  (cond ((null sorted-instance-list) (error "empty instance list"))
+(defun generate-list-of-ranges(sorted-instance-list attribute current-class lower-bound )
+  (cond ((null sorted-instance-list) (error "Empty Sorted instance list")) ;; we always expect something to be present in the sorted instance list
 	((and (= (length sorted-instance-list) 1)
-	      (not (equal class-name (class-name (first sorted-instance-list)))))
-	 ;(remhash attribute (attributes (first sorted-instance-list)))
-	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gensym)))
-	((and (= (length sorted-instance-list) 1)
-	      (equal class-name (class-name (first sorted-instance-list))))
-	 ;(remhash attribute (attributes (first sorted-instance-list)))
-	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gethash class-name current-symbol-hash)))
-	((not (equal class-name (class-name (first sorted-instance-list))))
-;	 (remhash attribute (attributes (first sorted-instance-list)))
-	 (setf (gethash (class-name (first sorted-instance-list)) current-symbol-hash) (gensym))
-	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gethash (class-name (first sorted-instance-list)) current-symbol-hash))
-	 (generate-range-symbols-helper (cdr sorted-instance-list) attribute (class-name (first sorted-instance-list)) current-symbol-hash))
-	((equal class-name (class-name (first sorted-instance-list)))
-	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gethash class-name current-symbol-hash))
-	 (generate-range-symbols-helper (cdr sorted-instance-list) attribute (class-name (first sorted-instance-list)) current-symbol-hash))))
+	      (not (equal current-class (class-name (first sorted-instance-list))))) 
+	 ;; In this case we are at the last element and the it is not the same class as the current class
+	 ;; So we create two new range objects 
+	 ;; One for the old range and one for the last element.
+	 (list (make-instance 'range 
+			      :lower-bound lower-bound
+			      :upper-bound (gethash attribute 
+						    (attributes (first sorted-instance-list)))
+			      :range-class current-class)
+	       (make-instance 'range 
+			      :lower-bound (gethash attribute 
+						    (attributes (first sorted-instance-list))) 
+			      :upper-bound (gethash attribute 
+						    (attributes (first sorted-instance-list)))
+			      :range-class (class-name (first sorted-instance-list)))))
+	((= (length sorted-instance-list) 1) ;;Otherwise
+	 (list (make-instance 'range
+			      :lower-bound lower-bound
+			      :upper-bound (gethash attribute 
+						    (attributes (first sorted-instance-list)))
+			      :range-class current-class)))
+	((not (equal current-class (class-name (first sorted-instance-list))))
+	 ;;The previous class and the current class do not match
+	 ;;so, this is another range...create a range object and call 
+	 ;;generate-list-of-ranges recursively
+	 (cons (make-instance 'range
+			      :lower-bound lower-bound 
+			      :upper-bound (gethash attribute (attributes (first sorted-instance-list)))
+			      :range-class current-class)
+	       (generate-list-of-ranges (cdr sorted-instance-list)
+					attribute
+					(class-name (first sorted-instance-list))
+					(gethash attribute (attributes (first sorted-instance-list))))))
+	(t
+	 (generate-list-of-ranges (cdr sorted-instance-list)
+				  attribute
+				  current-class
+				  lower-bound))))
+			      
+(defun generate-class-symbol-alist(range-list)
+  (let ((class-list (remove-duplicates (mapcar #'(lambda(x)
+						   (range-class x))
+					       range-list) :test #'equal)))
+    (mapcar #'(lambda(x)
+		(list x (gensym)))
+	    class-list)))
 	
-	 
-(defun generate-range-symbols(sorted-instance-list attribute)
-  (let ((new-hash (make-hash-table :test #'equal)))
-    (setf (gethash (class-name (First sorted-instance-list)) new-hash) (gensym))
-    (generate-range-symbols-helper sorted-instance-list attribute (class-name (First sorted-instance-list)) new-hash)
-    sorted-instance-list))
+				 
+;; What we will do here is a but ugly..but seems reasonable given what we have to do
+;; We will generate a list of range objects for ranges of different classes from the 
+;; training instances
+;; Once we get that...we will allocate a symbol for each unique class
+;; The drawback of this approach is that if we have a class that is missing in the 
+;; training data we will not be able to handle it.
+(defun generate-range-symbols(instance-list attribute)
+  (let* ((sorted-list (sort-on-continuous-valued-attribute instance-list attribute))
+	 (range-list (generate-list-of-ranges sorted-list attribute
+					      (class-name (first sorted-list)) 
+					      (gethash attribute (attributes (first sorted-list)))))
+	 (class-symbol-alist (generate-class-symbol-alist range-list)))
+    
+    (mapcar #'(lambda(x)
+		(setf (gethash attribute (attributes x))
+		      (second (assoc (class-name x) class-symbol-alist))))
+	    instance-list)
+    (print "=====")
+    (print range-list)
+    (print "=====")
+    (mapcar #'(lambda(x)
+		(let ((classname (range-class x)))
+		  (setf (range-class x)
+			(second (assoc classname class-symbol-alist)))))
+	    range-list)
+    range-list))
+    

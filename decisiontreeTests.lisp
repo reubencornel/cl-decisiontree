@@ -262,16 +262,16 @@
     (push (define-instance warm (temp 30)) instance-list)
     (push (define-instance cold (temp 10)) instance-list)
     (push (define-instance warm (temp 25)) instance-list)
+    (push (define-instance hot (temp 75)) instance-list)
     
     (format t "List Length: ~a~%" (length instance-list))
     (setf instance-list (sort-on-continuous-valued-attribute instance-list 'temp))
 
     (mapcar #'(lambda(x)
-		(format t "~a ~%" (class-name x))
-		(maphash #'(lambda(k v)
-			   
-			     (format t "~a ~a ~%" k v))
-			 (attributes x)))
+		(format t "~a ~a ~a~%" (range-class x)
+			(lower-bound x)
+			(upper-bound x)))
+	    
 	    (generate-range-symbols instance-list 'temp))
     (maphash #'(lambda(k v)
 		 (format t "~a ~a ~%" k v))
