@@ -26,4 +26,5 @@
 
            #:lower-bound
            #:upper-bound
-           #:range-class))
+           #:range-class
+           #:define-instance))

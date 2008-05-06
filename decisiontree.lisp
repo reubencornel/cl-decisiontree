@@ -193,12 +193,13 @@
 
 (defun classify(tree-root-node instance)
   (if (null tree-root-node)
-      (error "Not trained for this instance"))
-  (cond ((= (length (keys (subtree-hash tree-root-node))) 0) (label  tree-root-node))
-	(t (classify (gethash (gethash (attribute-name tree-root-node) ;;Get the value of the attribute associated with the current tree node
-				       (attributes instance))          ;; from the instance
-			      (subtree-hash tree-root-node)) instance)))) ;;Use that value to get to the next node
-
+      nil
+;      (error "Not trained for this instance"))
+      (cond ((= (length (keys (subtree-hash tree-root-node))) 0) (label  tree-root-node))
+	    (t (classify (gethash (gethash (attribute-name tree-root-node) ;;Get the value of the attribute associated with the current tree node
+					   (attributes instance))          ;; from the instance
+				  (subtree-hash tree-root-node)) instance))))) ;;Use that value to get to the next node
+  
 
 ;;;;;;;;;;;; BEGIN OF CONTINUOUS VALUED ATTRIBUTES ;;;;;;;;;;;;;;;;;;
 (defun sort-on-continuous-valued-attribute(list-of-instances attribute-name &optional (predicate #'<))
