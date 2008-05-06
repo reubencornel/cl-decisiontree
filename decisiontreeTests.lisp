@@ -265,24 +265,28 @@
     (push (define-instance cold (temp 10)) instance-list)
     (push (define-instance warm (temp 25)) instance-list)
     (push (define-instance hot (temp 75)) instance-list)
+    (push (define-instance warm (temp 89)) instance-list) 
+    (push (define-instance warm (temp 95)) instance-list)
+
     
     (format t "List Length: ~a~%" (length instance-list))
     (setf instance-list (sort-on-continuous-valued-attribute instance-list 'temp))
     ;;range symbol hash is a mapping between the classes and the range that was originally present
-    (defparameter range-symbol-hash (generate-range-symbols instance-list 'temp))
-    (maphash #'(lambda(k v)
-		 (format t "~a ~a ~%" k v))
-	     range-symbol-hash)
+;    (defparameter range-symbol-hash (generate-range-symbols instance-list 'temp))
+;    (maphash #'(lambda(k v)
+	;	 (format t "~a ~a ~%" k v))
+	 ;    range-symbol-hash)
 
+    (defparameter *range-list*  (generate-range-symbols instance-list 'temp))
     (mapcar #'(lambda(x)
 		(format t "~a ~a ~a~%" (range-class x)
 			(lower-bound x)
 			(upper-bound x)))
-	    
-	    (generate-range-symbols instance-list 'temp))
-    (maphash #'(lambda(k v)
-		 (format t "~a ~a ~%" k v))
-	     range-symbol-hash)))
+	    *range-list*)
+    (defparameter *v* (define-instance ? (temp 26)))
+    (replace-continuous-values *range-list* *v* 'temp)
+    (print (gethash 'temp (attributes *v*)))))
+
 
 (lisp-unit:run-tests generate-range-symbols-test)
 

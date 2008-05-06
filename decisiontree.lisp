@@ -281,4 +281,14 @@
 			(second (assoc classname class-symbol-alist)))))
 	    range-list)
     range-list))
-    
+
+(defun satisfies-p(range attr-val)
+  (and (>= attr-val (lower-bound range))
+       (< attr-val (upper-bound range))))
+
+(defun replace-continuous-values(range-list instance attribute)
+  (let ((range   (find-if #'(lambda(x)
+				    (satisfies-p x (gethash attribute (attributes instance))))
+				range-list)))
+    (setf (gethash attribute (attributes instance))
+	  (range-class range))))
