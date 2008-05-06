@@ -275,12 +275,11 @@
 	     range-symbol-hash)
 
     (mapcar #'(lambda(x)
-		(format t "~a ~%" (class-name x))
-		(maphash #'(lambda(k v)
-			   
-			     (format t "~a ~a ~%" k v))
-			 (attributes x)))
-	    instance-list)
+		(format t "~a ~a ~a~%" (range-class x)
+			(lower-bound x)
+			(upper-bound x)))
+	    
+	    (generate-range-symbols instance-list 'temp))
     (maphash #'(lambda(k v)
 		 (format t "~a ~a ~%" k v))
 	     range-symbol-hash)))
