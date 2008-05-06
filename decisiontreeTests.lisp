@@ -7,7 +7,6 @@
 ;;Below is a very ugly method of initializing the instance list. A better way would be to 
 ;; Use "define-instance" and push the result into a list.
 ;; Eg: (push (define-instance <Class> <attr-value pair>) <list>)
-
 (mapcar #'(lambda(x y)
 	    (mapcar #'(lambda(z)
 			(set-attribute-value (first z) (second z) y))
@@ -269,8 +268,8 @@
     
     (format t "List Length: ~a~%" (length instance-list))
     (setf instance-list (sort-on-continuous-valued-attribute instance-list 'temp))
+    ;;range symbol hash is a mapping between the classes and the range that was originally present
     (defparameter range-symbol-hash (generate-range-symbols instance-list 'temp))
-    
     (maphash #'(lambda(k v)
 		 (format t "~a ~a ~%" k v))
 	     range-symbol-hash)

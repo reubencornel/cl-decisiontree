@@ -191,6 +191,7 @@
 			      (subtree-hash tree-root-node)) instance)))) ;;Use that value to get to the next node
 
 
+;;;;;;;;;;;; BEGIN OF CONTINUOUS VALUED ATTRIBUTES ;;;;;;;;;;;;;;;;;;
 (defun sort-on-continuous-valued-attribute(list-of-instances attribute-name &optional (predicate #'<))
   "Sort elements of a list on based on the value of the attribute"
   (sort list-of-instances predicate :key (lambda(x)
@@ -217,10 +218,16 @@
 	((equal class-name (class-name (first sorted-instance-list)))
 	 (setf (gethash attribute (attributes (first sorted-instance-list))) (gethash class-name current-symbol-hash))
 	 (generate-range-symbols-helper (cdr sorted-instance-list) attribute (class-name (first sorted-instance-list)) current-symbol-hash))))
-	
+
 	 
 (defun generate-range-symbols(sorted-instance-list attribute)
   (let ((new-hash (make-hash-table :test #'equal)))
     (setf (gethash (class-name (First sorted-instance-list)) new-hash) (gensym))
     (generate-range-symbols-helper sorted-instance-list attribute (class-name (First sorted-instance-list)) new-hash)))
 ;    sorted-instance-list))
+
+(defun normalize(instance-list attribute)
+  (generate-range-symbols (sort-on-continuous-valued-attribute instance-list 
+							       attribute) 
+			  attribute))
+;;;;;;;;;;;; END OF CONTINUOUS VALUED ATTRIBUTES ;;;;;;;;;;;;;;;;;;
