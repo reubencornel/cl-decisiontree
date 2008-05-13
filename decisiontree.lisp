@@ -271,11 +271,12 @@
 					      (class-name (first sorted-list)) 
 					      (gethash attribute (attributes (first sorted-list)))))
 	 (class-symbol-alist (generate-class-symbol-alist range-list)))
-    
+    ;;replace the continous values with symbols
     (mapcar #'(lambda(x)
 		(setf (gethash attribute (attributes x))
 		      (second (assoc (class-name x) class-symbol-alist))))
 	    instance-list)
+    ;;replace teh class name with the appropriate symbol assigned to the class
     (mapcar #'(lambda(x)
 		(let ((classname (range-class x)))
 		  (setf (range-class x)
